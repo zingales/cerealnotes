@@ -1,3 +1,5 @@
+'use strict';
+
 var getInputField = function($form, field) {
     return $form.find('[name="' + field + '"]');
 };
