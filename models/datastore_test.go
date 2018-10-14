@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -9,19 +10,6 @@ import (
 	"github.com/atmiguel/cerealnotes/models"
 	"github.com/atmiguel/cerealnotes/test_util"
 )
-
-func determineDatabaseUrl() (string, error) {
-	environmentVariableName := "DATABASE_URL"
-	databaseUrl := os.Getenv(environmentVariableName)
-
-	if len(databaseUrl) == 0 {
-		return "", fmt.Errorf(
-			"environment variable %s not set",
-			environmentVariableName)
-	}
-
-	return databaseUrl, nil
-}
 
 var postgresUrl = os.Getenv("DATABASE_URL_TEST")
 
