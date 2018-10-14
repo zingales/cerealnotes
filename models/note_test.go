@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/atmiguel/cerealnotes/models"
-	"github.com/atmiguel/cerealnotes/test_util"
+  "github.com/atmiguel/cerealnotes/test_util"
 )
 
 var deserializationTests = []models.NoteCategory{

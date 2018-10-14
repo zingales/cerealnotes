@@ -74,7 +74,7 @@ func TestAuthenticatedFlow(t *testing.T) {
 		userJsonValue, _ := json.Marshal(userValues)
 
 		resp, err := client.Post(server.URL+paths.SessionApi, "application/json", bytes.NewBuffer(userJsonValue))
-
+    
 		test_util.Ok(t, err)
 
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
@@ -139,20 +139,61 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		jsonValue, _ := json.Marshal(categoryForm)
 
+
 		resp, err := sendPutRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
 		test_util.Ok(t, err)
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
 	}
 
+	// Delete note
+	{
+		mockDb.Func_GetUsersNotes = func(userId models.UserId) (models.NoteMap, error) {
+			return models.NoteMap(map[models.NoteId]*models.Note{
+				models.NoteId(noteIdAsInt): &models.Note{
+					AuthorId:     models.UserId(userIdAsInt),
+					Content:      content,
+					CreationTime: time.Now(),
+				},
+			}), nil
+		}
+
+		mockDb.Func_DeleteNoteById = func(noteid models.NoteId) error {
+			if int64(noteid) == noteIdAsInt {
+				return nil
+			}
+
+			return errors.New("Somehow you didn't get the correct error")
+		}
+
+		resp, err := sendDeleteRequest(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10))
+		ok(t, err)
+		// printBody(resp)
+
+		equals(t, http.StatusOK, resp.StatusCode)
+	}
+
 }
 
+// func sendDeleteRequest(client *http.Client, myUrl string, contentType string, body io.Reader) (resp *http.Response, err error) {
+func sendDeleteRequest(client *http.Client, myUrl string) (resp *http.Response, err error) {
+
+	req, err := http.NewRequest("DELETE", myUrl, nil)
+  
+	if err != nil {
+		return nil, err
+	}
+  
+	req.Header.Set("Content-Type", contentType)
+	return client.Do(req)
+}
+  
 func sendPutRequest(client *http.Client, myUrl string, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest("PUT", myUrl, body)
 
 	if err != nil {
 		return nil, err
 	}
-
+  
 	req.Header.Set("Content-Type", contentType)
 	return client.Do(req)
 }
@@ -178,6 +219,8 @@ type DiyMockDataStore struct {
 	Func_StoreNewUser                     func(string, *models.EmailAddress, string) error
 	Func_AuthenticateUserCredentials      func(*models.EmailAddress, string) error
 	Func_GetIdForUserWithEmailAddress     func(*models.EmailAddress) (models.UserId, error)
+	Func_GetUsersNotes                    func(models.UserId) (models.NoteMap, error)
+	Func_DeleteNoteById                   func(models.NoteId) error
 }
 
 func (mock *DiyMockDataStore) StoreNewNote(note *models.Note) (models.NoteId, error) {
