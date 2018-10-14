@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/atmiguel/cerealnotes/handlers"
 	"github.com/atmiguel/cerealnotes/models"
@@ -74,7 +75,7 @@ func TestAuthenticatedFlow(t *testing.T) {
 		userJsonValue, _ := json.Marshal(userValues)
 
 		resp, err := client.Post(server.URL+paths.SessionApi, "application/json", bytes.NewBuffer(userJsonValue))
-    
+
 		test_util.Ok(t, err)
 
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
@@ -139,7 +140,6 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		jsonValue, _ := json.Marshal(categoryForm)
 
-
 		resp, err := sendPutRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
 		test_util.Ok(t, err)
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
@@ -166,10 +166,10 @@ func TestAuthenticatedFlow(t *testing.T) {
 		}
 
 		resp, err := sendDeleteRequest(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10))
-		ok(t, err)
+		test_util.Ok(t, err)
 		// printBody(resp)
 
-		equals(t, http.StatusOK, resp.StatusCode)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
 	}
 
 }
@@ -178,22 +178,21 @@ func TestAuthenticatedFlow(t *testing.T) {
 func sendDeleteRequest(client *http.Client, myUrl string) (resp *http.Response, err error) {
 
 	req, err := http.NewRequest("DELETE", myUrl, nil)
-  
+
 	if err != nil {
 		return nil, err
 	}
-  
-	req.Header.Set("Content-Type", contentType)
+
 	return client.Do(req)
 }
-  
+
 func sendPutRequest(client *http.Client, myUrl string, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest("PUT", myUrl, body)
 
 	if err != nil {
 		return nil, err
 	}
-  
+
 	req.Header.Set("Content-Type", contentType)
 	return client.Do(req)
 }
@@ -241,4 +240,11 @@ func (mock *DiyMockDataStore) AuthenticateUserCredentials(email *models.EmailAdd
 
 func (mock *DiyMockDataStore) GetIdForUserWithEmailAddress(email *models.EmailAddress) (models.UserId, error) {
 	return mock.Func_GetIdForUserWithEmailAddress(email)
+}
+
+func (mock *DiyMockDataStore) GetUsersNotes(userId models.UserId) (models.NoteMap, error) {
+	return mock.Func_GetUsersNotes(userId)
+}
+func (mock *DiyMockDataStore) DeleteNoteById(noteId models.NoteId) error {
+	return mock.Func_DeleteNoteById(noteId)
 }

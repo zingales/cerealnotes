@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 )
 
@@ -83,3 +84,4 @@ func (db *DB) DeleteNoteById(noteId NoteId) error {
 	}
 
 	return nil
+}
