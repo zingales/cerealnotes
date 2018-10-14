@@ -22,7 +22,6 @@ func TestToken(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
 	if claims, ok := token.Claims.(*handlers.JwtTokenClaim); ok && token.Valid {
 		test_util.Equals(t, int64(32), int64(claims.UserId))
 
