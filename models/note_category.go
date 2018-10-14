@@ -60,7 +60,10 @@ func (db *DB) AssignNoteCategoryRelationship(noteId NoteId, category NoteCategor
 	sqlQuery := `
 		INSERT INTO note_to_category_relationship (note_id, category)
 		VALUES ($1, $2)
-		ON CONFLICT (note_id) DO UPDATE SET category = ($2)`
+		ON CONFLICT (note_id) DO
+		UPDATE SET category = ($2)
+		WHERE note_to_category_relationship.note_id = ($1)`
+
 	rowsAffected, err := db.execNoResults(sqlQuery, int64(noteId), category.String())
 	if err != nil {
 		return err

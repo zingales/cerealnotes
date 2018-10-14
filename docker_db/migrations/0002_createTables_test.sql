@@ -1,3 +1,5 @@
+\c cerealnotes_test;
+
 -- Types
 CREATE TYPE category_type AS ENUM ('predictions', 'marginalia', 'meta', 'questions');
 

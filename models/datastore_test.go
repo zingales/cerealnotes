@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/atmiguel/cerealnotes/test_util"
 )
 
-var postgresUrl = "postgresql://localhost/cerealnotes_test?sslmode=disable"
+var postgresUrl = os.Getenv("DATABASE_URL_TEST")
 
 const noteTable = "note"
 const publicationTable = "publication"
@@ -26,7 +27,7 @@ var tables = []string{
 	userTable,
 }
 
-func ClearAllValuesInTable(db *models.DB) {
+func ClearValuesInAllTables(db *models.DB) {
 	for _, val := range tables {
 		if err := ClearValuesInTable(db, val); err != nil {
 			panic(err)
@@ -47,7 +48,7 @@ func ClearValuesInTable(db *models.DB, table string) error {
 }
 
 func TestUser(t *testing.T) {
-	db, err := models.ConnectToDatabase(postgresUrl)
+	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
 	ClearValuesInTable(db, userTable)
 
@@ -76,7 +77,7 @@ func TestUser(t *testing.T) {
 }
 
 func TestNote(t *testing.T) {
-	db, err := models.ConnectToDatabase(postgresUrl)
+	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
 	ClearValuesInTable(db, userTable)
 	ClearValuesInTable(db, noteTable)
@@ -119,7 +120,7 @@ func TestNote(t *testing.T) {
 }
 
 func TestPublication(t *testing.T) {
-	db, err := models.ConnectToDatabase(postgresUrl)
+	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
 	ClearValuesInTable(db, userTable)
 	ClearValuesInTable(db, noteTable)
@@ -155,7 +156,7 @@ func TestPublication(t *testing.T) {
 }
 
 func TestCategory(t *testing.T) {
-	db, err := models.ConnectToDatabase(postgresUrl)
+	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
 	ClearValuesInTable(db, userTable)
 	ClearValuesInTable(db, noteTable)

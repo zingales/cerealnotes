@@ -1,3 +1,5 @@
+'use strict';
+
 $(function() {
     $("#logout-button").click(() => {
         $.ajax({

@@ -2,14 +2,14 @@
 
 $(function() {
   // http://stepansuvorov.com/blog/2014/04/jquery-put-and-delete/
-  jQuery.each( [ "put", "delete" ], function( i, method ) {
-    jQuery[ method ] = function( url, data, callback, type ) {
-      if ( jQuery.isFunction( data ) ) {
+  jQuery.each(["put", "delete"], function(i, method) {
+    jQuery[method] = function(url, data, callback, type) {
+      if (jQuery.isFunction(data)) {
         type = type || callback;
         callback = data;
         data = undefined;
       }
-   
+
       return jQuery.ajax({
         url: url,
         type: method,
@@ -20,13 +20,9 @@ $(function() {
     };
   });
 
-<<<<<<< HEAD
-  jQuery.prototype.getDOM = function() {
-=======
   jQuery.prototype.getUnderlyingDomElement = function() {
->>>>>>> origin/master
     if (this.length === 1) {
-        return this[0];
+      return this[0];
     }
 
     if (this.length === 0) {

@@ -149,6 +149,37 @@ func TestAuthenticatedFlow(t *testing.T) {
 		test_util.Equals(t, http.StatusOK, resp.StatusCode)
 	}
 
+	// Test edit notes
+	{
+		type NoteUpdateForm struct {
+			Content string `json:"content"`
+		}
+
+		mockDb.Func_GetNoteById = func(models.NoteId) (*models.Note, error) {
+			return &models.Note{
+				AuthorId:     models.UserId(userIdAsInt),
+				Content:      content,
+				CreationTime: time.Now().UTC(),
+			}, nil
+		}
+
+		mockDb.Func_UpdateNoteContent = func(models.NoteId, string) error {
+			return nil
+		}
+
+		noteForm := &NoteUpdateForm{
+			Content: "anything else",
+		}
+
+		jsonValue, _ := json.Marshal(noteForm)
+
+		resp, err := sendPutRequest(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+		printBody(resp)
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
+
+	}
+
 	// Test Category
 	{
 		type CategoryForm struct {
@@ -242,38 +273,6 @@ func TestAuthenticatedFlow(t *testing.T) {
 		resp, err := client.Post(server.URL+paths.PublicationApi, "", nil)
 		test_util.Ok(t, err)
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
-	}
-
-	// Test edit notes
-	{
-		type NoteUpdateForm struct {
-			NoteId  int64  `json:"id"`
-			Content string `json:"content"`
-		}
-
-		mockDb.Func_GetNoteById = func(models.NoteId) (*models.Note, error) {
-			return &models.Note{
-				AuthorId:     models.UserId(userIdAsInt),
-				Content:      content,
-				CreationTime: time.Now().UTC(),
-			}, nil
-		}
-
-		mockDb.Func_UpdateNoteContent = func(models.NoteId, string) error {
-			return nil
-		}
-
-		noteForm := &NoteUpdateForm{
-			Content: "anything else",
-		}
-
-		jsonValue, _ := json.Marshal(noteForm)
-
-		resp, err := sendPutRequest(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
-		printBody(resp)
-		test_util.Ok(t, err)
-		test_util.Equals(t, http.StatusOK, resp.StatusCode)
-
 	}
 
 	// Delete note
