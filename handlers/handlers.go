@@ -508,8 +508,43 @@ func HandleCategoryApiRequest(
 
 	case http.MethodPost:
 
+		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
+		noteId := models.NoteId(id)
+
+		type NoteCategoryForm struct {
+			NoteCategory string `json:"category"`
+		}
+
+		categoryForm := new(NoteCategoryForm)
+
+		if err := json.NewDecoder(request.Body).Decode(categoryForm); err != nil {
+			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		category, err := models.DeserializeNoteCategory(categoryForm.NoteCategory)
+
+		if err != nil {
+			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if err := env.Db.StoreNewNoteCategoryRelationship(models.NoteId(noteId), category); err != nil {
+			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		responseWriter.WriteHeader(http.StatusCreated)
+
+	case http.MethodPut:
+		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
+		if err != nil {
+			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+			return
+		}
+		noteId := models.NoteId(id)
+
 		type CategoryForm struct {
-			NoteId   int64  `json:"noteId"`
 			Category string `json:"category"`
 		}
 
@@ -519,7 +554,7 @@ func HandleCategoryApiRequest(
 			return err, http.StatusBadRequest
 		}
 
-		category, err := models.DeserializeCategory(strings.ToLower(noteForm.Category))
+		category, err := models.DeserializeNoteCategory(strings.ToLower(noteForm.Category))
 
 		if err != nil {
 			return err, http.StatusBadRequest
@@ -529,7 +564,24 @@ func HandleCategoryApiRequest(
 			return err, http.StatusInternalServerError
 		}
 
-		responseWriter.WriteHeader(http.StatusCreated)
+		responseWriter.WriteHeader(http.StatusOK)
+
+	case http.MethodDelete:
+
+		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
+		if err != nil {
+			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		noteId := models.NoteId(id)
+
+		if err := env.Db.DeleteNoteCategory(noteId); err != nil {
+			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		responseWriter.WriteHeader(http.StatusOK)
 
 		return nil, 0
 

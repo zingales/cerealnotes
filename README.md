@@ -5,7 +5,7 @@
 	* `brew install heroku`
 * golang installed
 	* `brew install go`
-* godep installed: 
+* godep installed:
 	* `go get github.com/tools/godep`
 
 ## Heroku
