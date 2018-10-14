@@ -16,33 +16,12 @@ type Note struct {
 var NoNoteFoundError = errors.New("No note with that information could be found")
 
 //  DB methods
-
-func (db *DB) StoreNewNote(
-	note *Note,
-) (NoteId, error) {
-
-	authorId := int64(note.AuthorId)
-	content := note.Content
-	creationTime := note.CreationTime
-
-	sqlQuery := `
-		INSERT INTO note (author_id, content, creation_time)
-		VALUES ($1, $2, $3)
-		RETURNING id`
-
-	var noteId int64 = 0
-	if err := db.execOneResult(sqlQuery, &noteId, authorId, content, creationTime); err != nil {
-		return 0, err
-	}
-	return NoteId(noteId), nil
-}
-
-func (db *DB) GetUsersNotes(userId UserId) (NoteMap, error) {
+func (db *DB) GetUsersNotes(userId UserId) (NotesById, error) {
 	sqlQuery := `
 		SELECT id, author_id, content, creation_time FROM note
 		WHERE author_id = $1`
 
-	noteMap, err := db.getNoteMap(sqlQuery, int64(userId))
+	noteMap, err := db.getNotesById(sqlQuery, int64(userId))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +29,7 @@ func (db *DB) GetUsersNotes(userId UserId) (NoteMap, error) {
 	return noteMap, nil
 }
 
-func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NoteMap, error) {
+func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NotesById, error) {
 
 	sqlQueryIssueNumber := `
 		SELECT COUNT(*) AS IssueNumber FROM publication
@@ -109,7 +88,7 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NoteMap, e
 
 	defer rows.Close()
 
-	pubToNoteMap := make(map[int64]NoteMap)
+	pubToNotesById := make(map[int64]NotesById)
 
 	for rows.Next() {
 		var publicationNumber int64
@@ -119,32 +98,75 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NoteMap, e
 			return nil, err
 		}
 
-		noteMap, ok := pubToNoteMap[publicationNumber]
+		noteMap, ok := pubToNotesById[publicationNumber]
 		if !ok {
-			pubToNoteMap[publicationNumber] = make(map[NoteId]*Note)
-			noteMap = pubToNoteMap[publicationNumber]
+			pubToNotesById[publicationNumber] = make(map[NoteId]*Note)
+			noteMap = pubToNotesById[publicationNumber]
 		}
 
 		noteMap[NoteId(noteId)] = note
 
 	}
-
-	return pubToNoteMap, nil
+	return pubToNotesById, nil
 }
 
-func (db *DB) GetMyUnpublishedNotes(userId UserId) (NoteMap, error) {
+func (db *DB) GetMyUnpublishedNotes(userId UserId) (NotesById, error) {
 	sqlQuery := `
 		SELECT id, author_id, content, creation_time FROM note
 		LEFT OUTER JOIN note_to_publication_relationship AS note2pub
 			ON note.id = note2pub.note_id
 		WHERE note2pub.note_id is NULL AND note.author_id = $1`
 
-	noteMap, err := db.getNoteMap(sqlQuery, int64(userId))
+	noteMap, err := db.getNotesById(sqlQuery, int64(userId))
 	if err != nil {
 		return nil, err
 	}
 
 	return noteMap, nil
+}
+
+func (db *DB) getNotesById(sqlQuery string, args ...interface{}) (NotesById, error) {
+	noteMap := make(map[NoteId]*Note)
+
+	rows, err := db.Query(sqlQuery, args...)
+	if err != nil {
+		return nil, convertPostgresError(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tempId int64
+		tempNote := &Note{}
+		if err := rows.Scan(&tempId, &tempNote.AuthorId, &tempNote.Content, &tempNote.CreationTime); err != nil {
+			return nil, convertPostgresError(err)
+		}
+
+		noteMap[NoteId(tempId)] = tempNote
+	}
+
+	return noteMap, nil
+}
+
+//  DB methods
+
+func (db *DB) StoreNewNote(
+	note *Note,
+) (NoteId, error) {
+
+	authorId := int64(note.AuthorId)
+	content := note.Content
+	creationTime := note.CreationTime
+
+	sqlQuery := `
+		INSERT INTO note (author_id, content, creation_time)
+		VALUES ($1, $2, $3)
+		RETURNING id`
+
+	var noteId int64 = 0
+	if err := db.execOneResult(sqlQuery, &noteId, authorId, content, creationTime); err != nil {
+		return 0, err
+	}
+	return NoteId(noteId), nil
 }
 
 func (db *DB) getNoteMap(sqlQuery string, args ...interface{}) (NoteMap, error) {
@@ -191,7 +213,7 @@ func (db *DB) GetNoteById(noteId NoteId) (*Note, error) {
 
 func (db *DB) UpdateNoteContent(noteId NoteId, content string) error {
 	sqlQuery := `
-		UPDATE note SET content = ($2) 
+		UPDATE note SET content = ($2)
 		WHERE id = ($1)`
 
 	rowsAffected, err := db.execNoResults(sqlQuery, int64(noteId), content)

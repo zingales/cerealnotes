@@ -23,20 +23,19 @@ type Datastore interface {
 	AuthenticateUserCredentials(*EmailAddress, string) error
 	GetIdForUserWithEmailAddress(*EmailAddress) (UserId, error)
 	StoreNewUser(string, *EmailAddress, string) error
-	GetAllUsersById() (UserMap, error)
+	GetAllUsersById() (UsersById, error)
 
 	// Cateogry Actions
-	StoreNewNoteCategoryRelationship(NoteId, Category) error
-	UpdateNoteCategory(NoteId, Category) error
+	AssignNoteCategoryRelationship(NoteId, NoteCategory) error
 	DeleteNoteCategory(NoteId) error
-	GetNoteCategory(NoteId) (Category, error)
+	GetNoteCategory(NoteId) (NoteCategory, error)
 
 	// Note Actions
-	GetUsersNotes(UserId) (NoteMap, error)
+	GetUsersNotes(UserId) (NotesById, error)
 	DeleteNoteById(NoteId) error
-	GetMyUnpublishedNotes(UserId) (NoteMap, error)
+	GetMyUnpublishedNotes(UserId) (NotesById, error)
 	StoreNewNote(*Note) (NoteId, error)
-	GetAllPublishedNotesVisibleBy(UserId) (map[int64]NoteMap, error)
+	GetAllPublishedNotesVisibleBy(UserId) (map[int64]NotesById, error)
 	GetNoteById(NoteId) (*Note, error)
 	UpdateNoteContent(NoteId, string) error
 
