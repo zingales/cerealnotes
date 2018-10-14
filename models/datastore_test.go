@@ -139,10 +139,10 @@ func TestPublication(t *testing.T) {
 	test_util.Equals(t, 0, len(publicationToNotesById))
 
 	err = db.PublishNotes(userId)
-	ok(t, err)
+	test_util.Ok(t, err)
 
-	publicationToNoteMap, err = db.GetAllPublishedNotesVisibleBy(userId)
-	equals(t, 1, len(publicationToNoteMap))
+	publicationToNotesById, err = db.GetAllPublishedNotesVisibleBy(userId)
+	test_util.Equals(t, 1, len(publicationToNotesById))
 }
 
 func TestCategory(t *testing.T) {

@@ -171,10 +171,10 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		jsonValue, _ := json.Marshal(categoryForm)
 
-    resp, err := sendPutRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+		resp, err := sendPutRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
 		test_util.Ok(t, err)
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
-
+	}
 
 	// Test publish notes
 	{
@@ -184,8 +184,8 @@ func TestAuthenticatedFlow(t *testing.T) {
 		// publish new api
 		resp, err := client.Post(server.URL+paths.PublicationApi, "", nil)
 		printBody(resp)
-		ok(t, err)
-		equals(t, http.StatusCreated, resp.StatusCode)
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
 	}
 
 	// Delete note
@@ -214,7 +214,6 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		test_util.Equals(t, http.StatusOK, resp.StatusCode)
 	}
-
 }
 
 // func sendDeleteRequest(client *http.Client, myUrl string, contentType string, body io.Reader) (resp *http.Response, err error) {
@@ -266,14 +265,13 @@ type DiyMockDataStore struct {
 	Func_GetMyUnpublishedNotes            func(models.UserId) (models.NotesById, error)
 	Func_GetAllUsersById                  func() (models.UsersById, error)
 	Func_GetAllPublishedNotesVisibleBy    func(models.UserId) (map[int64]models.NotesById, error)
-  Func_PublishNotes                     func(models.UserId) error
+	Func_PublishNotes                     func(models.UserId) error
 	Func_StoreNewPublication              func(*models.Publication) (models.PublicationId, error)
 }
 
 func (mock *DiyMockDataStore) StoreNewNote(note *models.Note) (models.NoteId, error) {
 	return mock.Func_StoreNewNote(note)
 }
-
 
 func (mock *DiyMockDataStore) StoreNewNoteCategoryRelationship(noteId models.NoteId, cat models.NoteCategory) error {
 	return mock.Func_StoreNewNoteCategoryRelationship(noteId, cat)
@@ -298,7 +296,7 @@ func (mock *DiyMockDataStore) GetUsersNotes(userId models.UserId) (models.NotesB
 func (mock *DiyMockDataStore) DeleteNoteById(noteId models.NoteId) error {
 	return mock.Func_DeleteNoteById(noteId)
 }
-  
+
 func (mock *DiyMockDataStore) GetMyUnpublishedNotes(userId models.UserId) (models.NotesById, error) {
 	return mock.Func_GetMyUnpublishedNotes(userId)
 }
