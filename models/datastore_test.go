@@ -58,7 +58,7 @@ func TestUser(t *testing.T) {
 	err = db.StoreNewUser(displayName, emailAddress, password)
 	test_util.Ok(t, err)
 
-	id, err = db.GetIdForUserWithEmailAddress(emailAddress)
+	id, err := db.GetIdForUserWithEmailAddress(emailAddress)
 	test_util.Ok(t, err)
 
 	err = db.AuthenticateUserCredentials(emailAddress, password)
@@ -77,7 +77,7 @@ func TestUser(t *testing.T) {
 
 func TestNote(t *testing.T) {
 	db, err := models.ConnectToDatabase(postgresUrl)
-	ok(t, err)
+	test_util.Ok(t, err)
 	ClearValuesInTable(db, userTable)
 	ClearValuesInTable(db, noteTable)
 
@@ -86,27 +86,27 @@ func TestNote(t *testing.T) {
 	emailAddress := models.NewEmailAddress("thisIsMyEmail@gmail.com")
 
 	err = db.StoreNewUser(displayName, emailAddress, password)
-	ok(t, err)
+	test_util.Ok(t, err)
 
 	userId, err := db.GetIdForUserWithEmailAddress(emailAddress)
-	ok(t, err)
+	test_util.Ok(t, err)
 
 	note := &models.Note{AuthorId: userId, Content: "I'm a note", CreationTime: time.Now()}
 	id, err := db.StoreNewNote(note)
-	ok(t, err)
-	assert(t, int64(id) > 0, "Note Id was not a valid index: "+strconv.Itoa(int(id)))
+	test_util.Ok(t, err)
+	test_util.Assert(t, int64(id) > 0, "Note Id was not a valid index: "+strconv.Itoa(int(id)))
 
 	notemap, err := db.GetMyUnpublishedNotes(userId)
-	ok(t, err)
+	test_util.Ok(t, err)
 
 	retrievedNote, isOk := notemap[id]
-	assert(t, isOk, "Expected NoteId missing")
+	test_util.Assert(t, isOk, "Expected NoteId missing")
 
-	equals(t, note.AuthorId, retrievedNote.AuthorId)
-	equals(t, note.Content, retrievedNote.Content)
+	test_util.Equals(t, note.AuthorId, retrievedNote.AuthorId)
+	test_util.Equals(t, note.Content, retrievedNote.Content)
 
 	err = db.DeleteNoteById(id)
-	ok(t, err)
+	test_util.Ok(t, err)
 }
 
 func TestPublication(t *testing.T) {
@@ -134,9 +134,9 @@ func TestPublication(t *testing.T) {
 
 	fmt.Println(userId)
 	publicationToNoteMap, err := db.GetAllPublishedNotesVisibleBy(userId)
-	ok(t, err)
+	test_util.Ok(t, err)
 
-	equals(t, 0, len(publicationToNoteMap))
+	test_util.Equals(t, 0, len(publicationToNoteMap))
 
 	// TODO once we implement publication publishing, test publication adding,
 	// and that GetAllPublishedNotesVisibleBy has non-zero rows

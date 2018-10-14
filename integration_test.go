@@ -252,7 +252,7 @@ type DiyMockDataStore struct {
 	Func_GetUsersNotes                    func(models.UserId) (models.NoteMap, error)
 	Func_DeleteNoteById                   func(models.NoteId) error
 	Func_GetMyUnpublishedNotes            func(models.UserId) (models.NoteMap, error)
-	Func_GetAllUsersById                  func() (models.UserMap, error)
+	Func_GetAllUsersById                  func() (models.UsersById, error)
 	Func_GetAllPublishedNotesVisibleBy    func(models.UserId) (map[int64]models.NoteMap, error)
 }
 
@@ -288,7 +288,7 @@ func (mock *DiyMockDataStore) GetMyUnpublishedNotes(userId models.UserId) (model
 	return mock.Func_GetMyUnpublishedNotes(userId)
 }
 
-func (mock *DiyMockDataStore) GetAllUsersById() (models.UserMap, error) {
+func (mock *DiyMockDataStore) GetAllUsersById() (models.UsersById, error) {
 	return mock.Func_GetAllUsersById()
 }
 

@@ -30,6 +30,7 @@ func (emailAddress *EmailAddress) String() string {
 var EmailAddressAlreadyInUseError = errors.New("Email address already in use")
 
 var CredentialsNotAuthorizedError = errors.New("The provided credentials were not found")
+
 //
 
 func (db *DB) StoreNewUser(
@@ -100,4 +101,32 @@ func (db *DB) GetIdForUserWithEmailAddress(emailAddress *EmailAddress) (UserId, 
 	}
 
 	return UserId(userId), nil
+}
+
+func (db *DB) GetAllUsersById() (UsersById, error) {
+	sqlQuery := `
+		SELECT id, display_name FROM app_user`
+
+	rows, err := db.Query(sqlQuery)
+	if err != nil {
+		return nil, convertPostgresError(err)
+	}
+
+	defer rows.Close()
+
+	var userMap UsersById = make(map[UserId]*User)
+
+	for rows.Next() {
+		var tempId int64
+		user := &User{}
+		if err := rows.Scan(&tempId, &user.DisplayName); err != nil {
+			return nil, convertPostgresError(err)
+		}
+
+		userMap[UserId(tempId)] = user
+
+	}
+
+	return userMap, nil
+
 }
