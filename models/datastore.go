@@ -26,8 +26,7 @@ type Datastore interface {
 	GetAllUsersById() (UsersById, error)
 
 	// Cateogry Actions
-	StoreNewNoteCategoryRelationship(NoteId, NoteCategory) error
-	UpdateNoteCategory(NoteId, NoteCategory) error
+	AssignNoteCategoryRelationship(NoteId, NoteCategory) error
 	DeleteNoteCategory(NoteId) error
 	GetNoteCategory(NoteId) (NoteCategory, error)
 
