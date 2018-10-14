@@ -112,12 +112,12 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 	// Test get notes
 	{
-		mockDb.Func_GetMyUnpublishedNotes = func(userId models.UserId) (models.NoteMap, error) {
+		mockDb.Func_GetMyUnpublishedNotes = func(userId models.UserId) (models.NotesById, error) {
 			if userIdAsInt != int64(userId) {
 				return nil, errors.New("Invalid userId passed in")
 			}
 
-			return models.NoteMap(map[models.NoteId]*models.Note{
+			return models.NotesById(map[models.NoteId]*models.Note{
 				models.NoteId(noteIdAsInt): &models.Note{
 					AuthorId:     models.UserId(userIdAsInt),
 					Content:      content,
@@ -127,13 +127,13 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		}
 
-		mockDb.Func_GetAllPublishedNotesVisibleBy = func(userId models.UserId) (map[int64]models.NoteMap, error) {
+		mockDb.Func_GetAllPublishedNotesVisibleBy = func(userId models.UserId) (map[int64]models.NotesById, error) {
 			if userIdAsInt != int64(userId) {
 				return nil, errors.New("Invalid userId passed in")
 			}
 
-			return map[int64]models.NoteMap{
-				1: models.NoteMap(map[models.NoteId]*models.Note{
+			return map[int64]models.NotesById{
+				1: models.NotesById(map[models.NoteId]*models.Note{
 					models.NoteId(44): &models.Note{
 						AuthorId:     models.UserId(99),
 						Content:      "another note",
@@ -178,8 +178,8 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 	// Delete note
 	{
-		mockDb.Func_GetUsersNotes = func(userId models.UserId) (models.NoteMap, error) {
-			return models.NoteMap(map[models.NoteId]*models.Note{
+		mockDb.Func_GetUsersNotes = func(userId models.UserId) (models.NotesById, error) {
+			return models.NotesById(map[models.NoteId]*models.Note{
 				models.NoteId(noteIdAsInt): &models.Note{
 					AuthorId:     models.UserId(userIdAsInt),
 					Content:      content,
@@ -249,11 +249,11 @@ type DiyMockDataStore struct {
 	Func_StoreNewUser                     func(string, *models.EmailAddress, string) error
 	Func_AuthenticateUserCredentials      func(*models.EmailAddress, string) error
 	Func_GetIdForUserWithEmailAddress     func(*models.EmailAddress) (models.UserId, error)
-	Func_GetUsersNotes                    func(models.UserId) (models.NoteMap, error)
+	Func_GetUsersNotes                    func(models.UserId) (models.NotesById, error)
 	Func_DeleteNoteById                   func(models.NoteId) error
-	Func_GetMyUnpublishedNotes            func(models.UserId) (models.NoteMap, error)
+	Func_GetMyUnpublishedNotes            func(models.UserId) (models.NotesById, error)
 	Func_GetAllUsersById                  func() (models.UsersById, error)
-	Func_GetAllPublishedNotesVisibleBy    func(models.UserId) (map[int64]models.NoteMap, error)
+	Func_GetAllPublishedNotesVisibleBy    func(models.UserId) (map[int64]models.NotesById, error)
 }
 
 func (mock *DiyMockDataStore) StoreNewNote(note *models.Note) (models.NoteId, error) {
@@ -276,7 +276,7 @@ func (mock *DiyMockDataStore) GetIdForUserWithEmailAddress(email *models.EmailAd
 	return mock.Func_GetIdForUserWithEmailAddress(email)
 }
 
-func (mock *DiyMockDataStore) GetUsersNotes(userId models.UserId) (models.NoteMap, error) {
+func (mock *DiyMockDataStore) GetUsersNotes(userId models.UserId) (models.NotesById, error) {
 	return mock.Func_GetUsersNotes(userId)
 }
 
@@ -284,7 +284,7 @@ func (mock *DiyMockDataStore) DeleteNoteById(noteId models.NoteId) error {
 	return mock.Func_DeleteNoteById(noteId)
 }
 
-func (mock *DiyMockDataStore) GetMyUnpublishedNotes(userId models.UserId) (models.NoteMap, error) {
+func (mock *DiyMockDataStore) GetMyUnpublishedNotes(userId models.UserId) (models.NotesById, error) {
 	return mock.Func_GetMyUnpublishedNotes(userId)
 }
 
@@ -292,6 +292,6 @@ func (mock *DiyMockDataStore) GetAllUsersById() (models.UsersById, error) {
 	return mock.Func_GetAllUsersById()
 }
 
-func (mock *DiyMockDataStore) GetAllPublishedNotesVisibleBy(userId models.UserId) (map[int64]models.NoteMap, error) {
+func (mock *DiyMockDataStore) GetAllPublishedNotesVisibleBy(userId models.UserId) (map[int64]models.NotesById, error) {
 	return mock.Func_GetAllPublishedNotesVisibleBy(userId)
 }

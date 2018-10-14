@@ -37,12 +37,12 @@ func (db *DB) StoreNewNote(
 	return NoteId(noteId), nil
 }
 
-func (db *DB) GetUsersNotes(userId UserId) (NoteMap, error) {
+func (db *DB) GetUsersNotes(userId UserId) (NotesById, error) {
 	sqlQuery := `
 		SELECT id, author_id, content, creation_time FROM note
 		WHERE author_id = $1`
 
-	noteMap, err := db.getNoteMap(sqlQuery, int64(userId))
+	noteMap, err := db.getNotesById(sqlQuery, int64(userId))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (db *DB) GetUsersNotes(userId UserId) (NoteMap, error) {
 	return noteMap, nil
 }
 
-func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NoteMap, error) {
+func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NotesById, error) {
 
 	sqlQueryIssueNumber := `
 		SELECT COUNT(*) AS IssueNumber FROM publication
@@ -109,7 +109,7 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NoteMap, e
 
 	defer rows.Close()
 
-	pubToNoteMap := make(map[int64]NoteMap)
+	pubToNotesById := make(map[int64]NotesById)
 
 	for rows.Next() {
 		var publicationNumber int64
@@ -119,25 +119,25 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NoteMap, e
 			return nil, err
 		}
 
-		noteMap, ok := pubToNoteMap[publicationNumber]
+		noteMap, ok := pubToNotesById[publicationNumber]
 		if !ok {
-			pubToNoteMap[publicationNumber] = make(map[NoteId]*Note)
+			pubToNotesById[publicationNumber] = make(map[NoteId]*Note)
 		}
 
 		noteMap[NoteId(noteId)] = note
 
 	}
-	return pubToNoteMap, nil
+	return pubToNotesById, nil
 }
 
-func (db *DB) GetMyUnpublishedNotes(userId UserId) (NoteMap, error) {
+func (db *DB) GetMyUnpublishedNotes(userId UserId) (NotesById, error) {
 	sqlQuery := `
 		SELECT id, author_id, content, creation_time FROM note
 		LEFT OUTER JOIN note_to_publication_relationship AS note2pub
 			ON note.id = note2pub.note_id
 		WHERE note2pub.note_id is NULL AND note.author_id = $1`
 
-	noteMap, err := db.getNoteMap(sqlQuery, int64(userId))
+	noteMap, err := db.getNotesById(sqlQuery, int64(userId))
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (db *DB) GetMyUnpublishedNotes(userId UserId) (NoteMap, error) {
 	return noteMap, nil
 }
 
-func (db *DB) getNoteMap(sqlQuery string, args ...interface{}) (NoteMap, error) {
+func (db *DB) getNotesById(sqlQuery string, args ...interface{}) (NotesById, error) {
 
 	noteMap := make(map[NoteId]*Note)
 

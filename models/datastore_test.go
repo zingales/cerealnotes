@@ -133,10 +133,10 @@ func TestPublication(t *testing.T) {
 	test_util.Assert(t, int64(id) > 0, "Note Id was not a valid index: "+strconv.Itoa(int(id)))
 
 	fmt.Println(userId)
-	publicationToNoteMap, err := db.GetAllPublishedNotesVisibleBy(userId)
+	publicationToNotesById, err := db.GetAllPublishedNotesVisibleBy(userId)
 	test_util.Ok(t, err)
 
-	test_util.Equals(t, 0, len(publicationToNoteMap))
+	test_util.Equals(t, 0, len(publicationToNotesById))
 
 	// TODO once we implement publication publishing, test publication adding,
 	// and that GetAllPublishedNotesVisibleBy has non-zero rows

@@ -24,11 +24,11 @@ type Datastore interface {
 	StoreNewUser(string, *EmailAddress, string) error
 	AuthenticateUserCredentials(*EmailAddress, string) error
 	GetIdForUserWithEmailAddress(*EmailAddress) (UserId, error)
-	GetUsersNotes(UserId) (NoteMap, error)
+	GetUsersNotes(UserId) (NotesById, error)
 	DeleteNoteById(NoteId) error
-	GetMyUnpublishedNotes(UserId) (NoteMap, error)
+	GetMyUnpublishedNotes(UserId) (NotesById, error)
 	GetAllUsersById() (UsersById, error)
-	GetAllPublishedNotesVisibleBy(UserId) (map[int64]NoteMap, error)
+	GetAllPublishedNotesVisibleBy(UserId) (map[int64]NotesById, error)
 }
 
 type DB struct {
