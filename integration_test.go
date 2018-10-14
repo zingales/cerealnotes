@@ -145,14 +145,13 @@ func TestAuthenticatedFlow(t *testing.T) {
 		}
 
 		resp, err := client.Get(server.URL + paths.NoteApi)
-		ok(t, err)
-		equals(t, http.StatusOK, resp.StatusCode)
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
 	}
 
 	// Test Category
 	{
 		type CategoryForm struct {
-			NoteId   int64  `json:"noteId"`
 			Category string `json:"category"`
 		}
 
@@ -160,9 +159,9 @@ func TestAuthenticatedFlow(t *testing.T) {
 		{
 			metaCategory := models.META
 
-			categoryForm := &CategoryForm{NoteId: noteIdAsInt, Category: metaCategory.String()}
+			categoryForm := &CategoryForm{Category: metaCategory.String()}
 
-			mockDb.Func_StoreNewNoteCategoryRelationship = func(noteId models.NoteId, cat models.Category) error {
+			mockDb.Func_AssignNoteCategoryRelationship = func(noteId models.NoteId, cat models.NoteCategory) error {
 				if int64(noteId) == noteIdAsInt && cat == metaCategory {
 					return nil
 				}
@@ -172,16 +171,16 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 			jsonValue, _ := json.Marshal(categoryForm)
 
-			resp, err := client.Post(server.URL+paths.CategoryApi, "application/json", bytes.NewBuffer(jsonValue))
-			ok(t, err)
-			equals(t, http.StatusCreated, resp.StatusCode)
+			resp, err := client.Post(server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+			test_util.Ok(t, err)
+			test_util.Equals(t, http.StatusCreated, resp.StatusCode)
 
 		}
 
 		// Get Cateogry
 		{
 
-			mockDb.Func_GetNoteCategory = func(noteId models.NoteId) (models.Category, error) {
+			mockDb.Func_GetNoteCategory = func(noteId models.NoteId) (models.NoteCategory, error) {
 				if int64(noteId) == noteIdAsInt {
 					return models.META, nil
 				}
@@ -190,8 +189,8 @@ func TestAuthenticatedFlow(t *testing.T) {
 			}
 
 			resp, err := client.Get(server.URL + paths.NoteApi + "?id=" + strconv.FormatInt(noteIdAsInt, 10))
-			ok(t, err)
-			equals(t, http.StatusOK, resp.StatusCode)
+			test_util.Ok(t, err)
+			test_util.Equals(t, http.StatusOK, resp.StatusCode)
 
 		}
 
@@ -201,7 +200,7 @@ func TestAuthenticatedFlow(t *testing.T) {
 			categoryForm := &CategoryForm{Category: questionCateogry.String()}
 			jsonValue, _ := json.Marshal(categoryForm)
 
-			mockDb.Func_UpdateNoteCategory = func(noteId models.NoteId, cat models.Category) error {
+			mockDb.Func_AssignNoteCategoryRelationship = func(noteId models.NoteId, cat models.NoteCategory) error {
 				if int64(noteId) == noteIdAsInt && cat == questionCateogry {
 					return nil
 				}
@@ -209,9 +208,10 @@ func TestAuthenticatedFlow(t *testing.T) {
 				return errors.New("Incorrect Data Arrived")
 			}
 
-			resp, err := sendPutRequest(client, server.URL+paths.CategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
-			ok(t, err)
-			equals(t, http.StatusOK, resp.StatusCode)
+			resp, err := client.Post(server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+			printBody(resp)
+			test_util.Ok(t, err)
+			test_util.Equals(t, http.StatusCreated, resp.StatusCode)
 
 		}
 
@@ -225,10 +225,10 @@ func TestAuthenticatedFlow(t *testing.T) {
 				return errors.New("Incorrect Data Arrived")
 			}
 
-			resp, err := sendDeleteUrl(client, server.URL+paths.CategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10))
+			resp, err := sendDeleteUrl(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10))
 
-			ok(t, err)
-			equals(t, http.StatusOK, resp.StatusCode)
+			test_util.Ok(t, err)
+			test_util.Equals(t, http.StatusOK, resp.StatusCode)
 
 		}
 	}
@@ -352,31 +352,26 @@ func printBody(resp *http.Response) {
 // Helpers
 
 type DiyMockDataStore struct {
-	Func_StoreNewNote                     func(*models.Note) (models.NoteId, error)
-	Func_StoreNewNoteCategoryRelationship func(models.NoteId, models.NoteCategory) error
-	Func_StoreNewUser                     func(string, *models.EmailAddress, string) error
-	Func_AuthenticateUserCredentials      func(*models.EmailAddress, string) error
-	Func_GetIdForUserWithEmailAddress     func(*models.EmailAddress) (models.UserId, error)
-	Func_GetUsersNotes                    func(models.UserId) (models.NotesById, error)
-	Func_DeleteNoteById                   func(models.NoteId) error
-	Func_GetMyUnpublishedNotes            func(models.UserId) (models.NotesById, error)
-	Func_GetAllUsersById                  func() (models.UsersById, error)
-	Func_GetAllPublishedNotesVisibleBy    func(models.UserId) (map[int64]models.NotesById, error)
-	Func_PublishNotes                     func(models.UserId) error
-	Func_StoreNewPublication              func(*models.Publication) (models.PublicationId, error)
-	Func_GetNoteById                      func(models.NoteId) (*models.Note, error)
-	Func_UpdateNoteContent                func(models.NoteId, string) error
-	Func_UpdateNoteCategory               func(models.NoteId, models.NoteCategory) error
-	Func_DeleteNoteCategory               func(models.NoteId) error
-	Func_GetNoteCategory                  func(models.NoteId) (models.NoteCategory, error)
+	Func_StoreNewNote                   func(*models.Note) (models.NoteId, error)
+	Func_StoreNewUser                   func(string, *models.EmailAddress, string) error
+	Func_AuthenticateUserCredentials    func(*models.EmailAddress, string) error
+	Func_GetIdForUserWithEmailAddress   func(*models.EmailAddress) (models.UserId, error)
+	Func_GetUsersNotes                  func(models.UserId) (models.NotesById, error)
+	Func_DeleteNoteById                 func(models.NoteId) error
+	Func_GetMyUnpublishedNotes          func(models.UserId) (models.NotesById, error)
+	Func_GetAllUsersById                func() (models.UsersById, error)
+	Func_GetAllPublishedNotesVisibleBy  func(models.UserId) (map[int64]models.NotesById, error)
+	Func_PublishNotes                   func(models.UserId) error
+	Func_StoreNewPublication            func(*models.Publication) (models.PublicationId, error)
+	Func_GetNoteById                    func(models.NoteId) (*models.Note, error)
+	Func_UpdateNoteContent              func(models.NoteId, string) error
+	Func_AssignNoteCategoryRelationship func(models.NoteId, models.NoteCategory) error
+	Func_DeleteNoteCategory             func(models.NoteId) error
+	Func_GetNoteCategory                func(models.NoteId) (models.NoteCategory, error)
 }
 
 func (mock *DiyMockDataStore) StoreNewNote(note *models.Note) (models.NoteId, error) {
 	return mock.Func_StoreNewNote(note)
-}
-
-func (mock *DiyMockDataStore) StoreNewNoteCategoryRelationship(noteId models.NoteId, cat models.NoteCategory) error {
-	return mock.Func_StoreNewNoteCategoryRelationship(noteId, cat)
 }
 
 func (mock *DiyMockDataStore) StoreNewUser(str1 string, email *models.EmailAddress, str2 string) error {
@@ -431,8 +426,8 @@ func (mock *DiyMockDataStore) GetNoteCategory(noteId models.NoteId) (models.Note
 	return mock.Func_GetNoteCategory(noteId)
 }
 
-func (mock *DiyMockDataStore) UpdateNoteCategory(noteId models.NoteId, category models.NoteCategory) error {
-	return mock.Func_UpdateNoteCategory(noteId, category)
+func (mock *DiyMockDataStore) AssignNoteCategoryRelationship(noteId models.NoteId, category models.NoteCategory) error {
+	return mock.Func_AssignNoteCategoryRelationship(noteId, category)
 }
 func (mock *DiyMockDataStore) DeleteNoteCategory(noteId models.NoteId) error {
 	return mock.Func_DeleteNoteCategory(noteId)

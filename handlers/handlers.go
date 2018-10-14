@@ -473,7 +473,7 @@ func HandleNoteApiRequest(
 	}
 }
 
-func HandleCategoryApiRequest(
+func HandleNoteCateogryApiRequest(
 	env *Environment,
 	responseWriter http.ResponseWriter,
 	request *http.Request,
@@ -518,99 +518,20 @@ func HandleCategoryApiRequest(
 		categoryForm := new(NoteCategoryForm)
 
 		if err := json.NewDecoder(request.Body).Decode(categoryForm); err != nil {
-			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
-			return
+			return err, http.StatusBadRequest
 		}
 
 		category, err := models.DeserializeNoteCategory(categoryForm.NoteCategory)
 
 		if err != nil {
-			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
-			return
+			return err, http.StatusBadRequest
 		}
 
-		if err := env.Db.StoreNewNoteCategoryRelationship(models.NoteId(noteId), category); err != nil {
-			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
-			return
+		if err := env.Db.AssignNoteCategoryRelationship(models.NoteId(noteId), category); err != nil {
+			return err, http.StatusInternalServerError
 		}
 
 		responseWriter.WriteHeader(http.StatusCreated)
-
-	case http.MethodPut:
-		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
-		if err != nil {
-			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
-			return
-		}
-		noteId := models.NoteId(id)
-
-		type CategoryForm struct {
-			Category string `json:"category"`
-		}
-
-		noteForm := new(CategoryForm)
-
-		if err := json.NewDecoder(request.Body).Decode(noteForm); err != nil {
-			return err, http.StatusBadRequest
-		}
-
-		category, err := models.DeserializeNoteCategory(strings.ToLower(noteForm.Category))
-
-		if err != nil {
-			return err, http.StatusBadRequest
-		}
-
-		if err := env.Db.StoreNewNoteCategoryRelationship(models.NoteId(noteForm.NoteId), category); err != nil {
-			return err, http.StatusInternalServerError
-		}
-
-		responseWriter.WriteHeader(http.StatusOK)
-
-	case http.MethodDelete:
-
-		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
-		if err != nil {
-			http.Error(responseWriter, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		noteId := models.NoteId(id)
-
-		if err := env.Db.DeleteNoteCategory(noteId); err != nil {
-			http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		responseWriter.WriteHeader(http.StatusOK)
-
-		return nil, 0
-
-	case http.MethodPut:
-		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
-		noteId := models.NoteId(id)
-
-		type CategoryForm struct {
-			Category string `json:"category"`
-		}
-
-		noteForm := new(CategoryForm)
-
-		if err := json.NewDecoder(request.Body).Decode(noteForm); err != nil {
-			return err, http.StatusBadRequest
-		}
-
-		category, err := models.DeserializeCategory(strings.ToLower(noteForm.Category))
-
-		if err != nil {
-			return err, http.StatusBadRequest
-		}
-
-		if err := env.Db.UpdateNoteCategory(noteId, category); err != nil {
-			return err, http.StatusInternalServerError
-		}
-
-		responseWriter.WriteHeader(http.StatusOK)
-
 		return nil, 0
 
 	case http.MethodDelete:
@@ -633,7 +554,6 @@ func HandleCategoryApiRequest(
 	default:
 		return respondWithMethodNotAllowed(responseWriter, http.MethodPost, http.MethodPut, http.MethodDelete)
 	}
-
 }
 
 func RedirectToPathHandler(

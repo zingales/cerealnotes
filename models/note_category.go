@@ -41,24 +41,6 @@ func (category NoteCategory) String() string {
 	return categoryStrings[category]
 }
 
-func (db *DB) StoreNewNoteCategoryRelationship(
-	noteId NoteId,
-	category NoteCategory,
-) error {
-	sqlQuery := `
-		INSERT INTO note_to_category_relationship (note_id, category)
-		VALUES ($1, $2)`
-
-	if _, err := db.execNoResults(sqlQuery, int64(noteId), category.String()); err != nil {
-		if err == UniqueConstraintError {
-			return NoteAlreadyContainsCategoryError
-		}
-		return err
-	}
-
-	return nil
-}
-
 func (db *DB) GetNoteCategory(noteId NoteId) (NoteCategory, error) {
 	sqlQuery := `
 		SELECT category FROM note_to_category_relationship
@@ -73,7 +55,8 @@ func (db *DB) GetNoteCategory(noteId NoteId) (NoteCategory, error) {
 	}
 	return category, nil
 }
-func (db *DB) UpdateNoteCategory(noteId NoteId, category NoteCategory) error {
+
+func (db *DB) AssignNoteCategoryRelationship(noteId NoteId, category NoteCategory) error {
 	sqlQuery := `
 		INSERT INTO note_to_category_relationship (note_id, category)
 		VALUES ($1, $2)
@@ -90,6 +73,7 @@ func (db *DB) UpdateNoteCategory(noteId NoteId, category NoteCategory) error {
 	}
 	return nil
 }
+
 func (db *DB) DeleteNoteCategory(noteId NoteId) error {
 	sqlQuery := `
 		DELETE FROM note_to_category_relationship

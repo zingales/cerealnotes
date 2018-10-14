@@ -176,7 +176,7 @@ func TestCategory(t *testing.T) {
 	test_util.Ok(t, err)
 
 	assignedCategory := models.META
-	err = db.StoreNewNoteCategoryRelationship(noteId, assignedCategory)
+	err = db.AssignNoteCategoryRelationship(noteId, assignedCategory)
 	test_util.Ok(t, err)
 
 	retrievedCategory, err := db.GetNoteCategory(noteId)
@@ -184,7 +184,7 @@ func TestCategory(t *testing.T) {
 	test_util.Equals(t, assignedCategory, retrievedCategory)
 
 	newAssignedCategory := models.PREDICTIONS
-	err = db.UpdateNoteCategory(noteId, newAssignedCategory)
+	err = db.AssignNoteCategoryRelationship(noteId, newAssignedCategory)
 	test_util.Ok(t, err)
 
 	newRetrievedCategory, err := db.GetNoteCategory(noteId)
