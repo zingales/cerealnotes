@@ -1,3 +1,5 @@
+"use strict";
+
 var USERS_BY_ID = {};
 
 const $createAuthor = function(authorId) {
@@ -8,9 +10,13 @@ const $createAuthor = function(authorId) {
   });
 };
 
-const $createType = function(type) {
-  return $('<span>', {
-    text: type
+const $createType = function(noteId) {
+  let spandId = noteId + "_category";
+  $.get('/api/category?id=' + noteId, function(responseObj) {
+    $("#" + spandId).text(responseObj.category);
+  });
+  return $('<span id="' + spandId + '">', {
+    text: ' - '
   });
 };
 
@@ -34,11 +40,15 @@ const $createDivider = function() {
 
 const $createNote = function(noteId, note) {
   const $author = $createAuthor(note.authorId);
-  const $type = $createType(note.type);
+  const $noteId = $('<span>', {
+    text: noteId
+  })
+  const $type = $createType(noteId);
   const $creationTime = $createCreationTime(note.creationTime);
   const $content = $createContent(note.content);
 
   const $header = $('<div>').addClass('note-header')
+    .append($noteId).append($createDivider())
     .append($author).append($createDivider())
     .append($type).append($createDivider())
     .append($creationTime);
