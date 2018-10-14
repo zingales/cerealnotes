@@ -1,7 +1,9 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -30,6 +32,20 @@ func (emailAddress *EmailAddress) String() string {
 var EmailAddressAlreadyInUseError = errors.New("Email address already in use")
 
 var CredentialsNotAuthorizedError = errors.New("The provided credentials were not found")
+
+type UserMap map[UserId]*User
+
+func (userMap UserMap) ToJson() ([]byte, error) {
+	// json doesn't support int indexed maps
+	userByIdString := make(map[string]User, len(userMap))
+
+	for id, user := range userMap {
+		userByIdString[fmt.Sprint(id)] = *user
+	}
+
+	return json.Marshal(userByIdString)
+}
+
 //
 
 func (db *DB) StoreNewUser(

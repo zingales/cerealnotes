@@ -121,7 +121,7 @@ func TestAuthenticatedFlow(t *testing.T) {
 				models.NoteId(noteIdAsInt): &models.Note{
 					AuthorId:     models.UserId(userIdAsInt),
 					Content:      content,
-					CreationTime: time.Now(),
+					CreationTime: time.Now().UTC(),
 				},
 			}), nil
 
@@ -151,12 +151,11 @@ func TestAuthenticatedFlow(t *testing.T) {
 		// TODO when we implement a real get notes feature we should enhance this code.
 	}
 
-	// Test Add category
+	type NoteCategoryForm struct {
+		NoteCategory string `json:"category"`
+	}
+	// Test Category
 	{
-		type NoteCategoryForm struct {
-			NoteCategory string `json:"category"`
-		}
-
 		metaNoteCategory := models.META
 
 		categoryForm := &NoteCategoryForm{NoteCategory: metaNoteCategory.String()}
@@ -171,9 +170,70 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		jsonValue, _ := json.Marshal(categoryForm)
 
-		resp, err := sendPutRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+		resp, err := client.Post(server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
 		test_util.Ok(t, err)
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
+
+	}
+
+	// Get Cateogry
+	{
+
+		mockDb.Func_GetNoteCategory = func(noteId models.NoteId) (models.NoteCategory, error) {
+			if int64(noteId) == noteIdAsInt {
+				return models.META, nil
+			}
+
+			return 0, errors.New("Incorrect data")
+		}
+
+		resp, err := client.Get(server.URL + paths.NoteApi + "?id=" + strconv.FormatInt(noteIdAsInt, 10))
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
+
+	}
+
+	// Update cateogry
+	{
+		questionCateogry := models.QUESTIONS
+		categoryForm := &NoteCategoryForm{NoteCategory: questionCateogry.String()}
+		jsonValue, _ := json.Marshal(categoryForm)
+
+		mockDb.Func_UpdateNoteCategory = func(noteId models.NoteId, cat models.NoteCategory) error {
+			if int64(noteId) == noteIdAsInt && cat == questionCateogry {
+				return nil
+			}
+
+			return errors.New("Incorrect Data Arrived")
+		}
+
+		resp, err := sendPutRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
+
+	}
+
+	// Delete category
+	{
+		type DeleteForm struct {
+			NoteId int64 `json:"noteId"`
+		}
+
+		deleteForm := &DeleteForm{NoteId: noteIdAsInt}
+		jsonValue, _ := json.Marshal(deleteForm)
+
+		mockDb.Func_DeleteNoteCategory = func(noteId models.NoteId) error {
+			if int64(noteId) == noteIdAsInt {
+				return nil
+			}
+
+			return errors.New("Incorrect Data Arrived")
+		}
+
+		resp, err := sendDeleteRequest(client, server.URL+paths.NoteCategoryApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
+
 	}
 
 	// Test publish notes
@@ -183,9 +243,41 @@ func TestAuthenticatedFlow(t *testing.T) {
 		}
 		// publish new api
 		resp, err := client.Post(server.URL+paths.PublicationApi, "", nil)
-		printBody(resp)
 		test_util.Ok(t, err)
 		test_util.Equals(t, http.StatusCreated, resp.StatusCode)
+	}
+
+	// Test edit notes
+	{
+		type NoteUpdateForm struct {
+			NoteId  int64  `json:"id"`
+			Content string `json:"content"`
+		}
+
+		mockDb.Func_GetNoteById = func(models.NoteId) (*models.Note, error) {
+			return &models.Note{
+				AuthorId:     models.UserId(userIdAsInt),
+				Content:      content,
+				CreationTime: time.Now().UTC(),
+			}, nil
+		}
+
+		mockDb.Func_UpdateNoteContent = func(models.NoteId, string) error {
+			return nil
+		}
+
+		noteForm := &NoteUpdateForm{
+			NoteId:  3,
+			Content: "anything else",
+		}
+
+		jsonValue, _ := json.Marshal(noteForm)
+
+		resp, err := sendPutRequest(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10), "application/json", bytes.NewBuffer(jsonValue))
+		printBody(resp)
+		test_util.Ok(t, err)
+		test_util.Equals(t, http.StatusOK, resp.StatusCode)
+
 	}
 
 	// Delete note
@@ -208,7 +300,7 @@ func TestAuthenticatedFlow(t *testing.T) {
 			return errors.New("Somehow you didn't get the correct error")
 		}
 
-		resp, err := sendDeleteRequest(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10))
+		resp, err := sendDeleteUrl(client, server.URL+paths.NoteApi+"?id="+strconv.FormatInt(noteIdAsInt, 10))
 		test_util.Ok(t, err)
 		// printBody(resp)
 
@@ -216,8 +308,17 @@ func TestAuthenticatedFlow(t *testing.T) {
 	}
 }
 
-// func sendDeleteRequest(client *http.Client, myUrl string, contentType string, body io.Reader) (resp *http.Response, err error) {
-func sendDeleteRequest(client *http.Client, myUrl string) (resp *http.Response, err error) {
+func sendDeleteRequest(client *http.Client, myUrl string, contentType string, body io.Reader) (resp *http.Response, err error) {
+	req, err := http.NewRequest("DELETE", myUrl, body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", contentType)
+	return client.Do(req)
+}
+func sendDeleteUrl(client *http.Client, myUrl string) (resp *http.Response, err error) {
 
 	req, err := http.NewRequest("DELETE", myUrl, nil)
 
@@ -267,6 +368,11 @@ type DiyMockDataStore struct {
 	Func_GetAllPublishedNotesVisibleBy    func(models.UserId) (map[int64]models.NotesById, error)
 	Func_PublishNotes                     func(models.UserId) error
 	Func_StoreNewPublication              func(*models.Publication) (models.PublicationId, error)
+	Func_GetNoteById                      func(models.NoteId) (*models.Note, error)
+	Func_UpdateNoteContent                func(models.NoteId, string) error
+	Func_UpdateNoteCategory               func(models.NoteId, models.NoteCategory) error
+	Func_DeleteNoteCategory               func(models.NoteId) error
+	Func_GetNoteCategory                  func(models.NoteId) (models.NoteCategory, error)
 }
 
 func (mock *DiyMockDataStore) StoreNewNote(note *models.Note) (models.NoteId, error) {
@@ -315,4 +421,23 @@ func (mock *DiyMockDataStore) PublishNotes(userId models.UserId) error {
 
 func (mock *DiyMockDataStore) StoreNewPublication(publication *models.Publication) (models.PublicationId, error) {
 	return mock.Func_StoreNewPublication(publication)
+}
+
+func (mock *DiyMockDataStore) GetNoteById(noteId models.NoteId) (*models.Note, error) {
+	return mock.Func_GetNoteById(noteId)
+}
+
+func (mock *DiyMockDataStore) UpdateNoteContent(noteId models.NoteId, content string) error {
+	return mock.Func_UpdateNoteContent(noteId, content)
+}
+
+func (mock *DiyMockDataStore) GetNoteCategory(noteId models.NoteId) (models.NoteCategory, error) {
+	return mock.Func_GetNoteCategory(noteId)
+}
+
+func (mock *DiyMockDataStore) UpdateNoteCategory(noteId models.NoteId, category models.NoteCategory) error {
+	return mock.Func_UpdateNoteCategory(noteId, category)
+}
+func (mock *DiyMockDataStore) DeleteNoteCategory(noteId models.NoteId) error {
+	return mock.Func_DeleteNoteCategory(noteId)
 }

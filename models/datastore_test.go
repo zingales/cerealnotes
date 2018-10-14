@@ -105,6 +105,15 @@ func TestNote(t *testing.T) {
 	test_util.Equals(t, note.AuthorId, retrievedNote.AuthorId)
 	test_util.Equals(t, note.Content, retrievedNote.Content)
 
+	updatedContent := "some new coolenss"
+	err = db.UpdateNoteContent(id, updatedContent)
+	test_util.Ok(t, err)
+
+	newNote, err := db.GetNoteById(id)
+	test_util.Ok(t, err)
+	test_util.Equals(t, updatedContent, newNote.Content)
+	test_util.Equals(t, note.AuthorId, newNote.AuthorId)
+
 	err = db.DeleteNoteById(id)
 	test_util.Ok(t, err)
 }
@@ -166,6 +175,22 @@ func TestCategory(t *testing.T) {
 	noteId, err := db.StoreNewNote(note)
 	test_util.Ok(t, err)
 
-	err = db.StoreNewNoteCategoryRelationship(noteId, models.META)
+	assignedCategory := models.META
+	err = db.StoreNewNoteCategoryRelationship(noteId, assignedCategory)
+	test_util.Ok(t, err)
+
+	retrievedCategory, err := db.GetNoteCategory(noteId)
+	test_util.Ok(t, err)
+	test_util.Equals(t, assignedCategory, retrievedCategory)
+
+	newAssignedCategory := models.PREDICTIONS
+	err = db.UpdateNoteCategory(noteId, newAssignedCategory)
+	test_util.Ok(t, err)
+
+	newRetrievedCategory, err := db.GetNoteCategory(noteId)
+	test_util.Ok(t, err)
+	test_util.Equals(t, newAssignedCategory, newRetrievedCategory)
+
+	err = db.DeleteNoteCategory(noteId)
 	test_util.Ok(t, err)
 }

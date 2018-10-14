@@ -16,26 +16,6 @@ type Note struct {
 var NoNoteFoundError = errors.New("No note with that information could be found")
 
 //  DB methods
-func (db *DB) StoreNewNote(
-	note *Note,
-) (NoteId, error) {
-
-	authorId := int64(note.AuthorId)
-	content := note.Content
-	creationTime := note.CreationTime
-
-	sqlQuery := `
-		INSERT INTO note (author_id, content, creation_time)
-		VALUES ($1, $2, $3)
-		RETURNING id`
-
-	var noteId int64 = 0
-	if err := db.execOneResult(sqlQuery, &noteId, authorId, content, creationTime); err != nil {
-		return 0, err
-	}
-	return NoteId(noteId), nil
-}
-
 func (db *DB) GetUsersNotes(userId UserId) (NotesById, error) {
 	sqlQuery := `
 		SELECT id, author_id, content, creation_time FROM note
@@ -78,7 +58,7 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NotesById,
 			   INNER JOIN note
 					   ON note.id = note2pub.note_id
 		WHERE  rank <= ($1)`
-  
+
 	// sqlQueryGetNotes := `
 	// 	SELECT
 	// 	note.id,
@@ -121,7 +101,7 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NotesById,
 		noteMap, ok := pubToNotesById[publicationNumber]
 		if !ok {
 			pubToNotesById[publicationNumber] = make(map[NoteId]*Note)
-      noteMap = pubToNotesById[publicationNumber]
+			noteMap = pubToNotesById[publicationNumber]
 		}
 
 		noteMap[NoteId(noteId)] = note
@@ -167,6 +147,91 @@ func (db *DB) getNotesById(sqlQuery string, args ...interface{}) (NotesById, err
 	return noteMap, nil
 }
 
+//  DB methods
+
+func (db *DB) StoreNewNote(
+	note *Note,
+) (NoteId, error) {
+
+	authorId := int64(note.AuthorId)
+	content := note.Content
+	creationTime := note.CreationTime
+
+	sqlQuery := `
+		INSERT INTO note (author_id, content, creation_time)
+		VALUES ($1, $2, $3)
+		RETURNING id`
+
+	var noteId int64 = 0
+	if err := db.execOneResult(sqlQuery, &noteId, authorId, content, creationTime); err != nil {
+		return 0, err
+	}
+	return NoteId(noteId), nil
+}
+
+func (db *DB) getNoteMap(sqlQuery string, args ...interface{}) (NoteMap, error) {
+
+	noteMap := make(map[NoteId]*Note)
+
+	rows, err := db.Query(sqlQuery, args...)
+	if err != nil {
+		return nil, convertPostgresError(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tempId int64
+		tempNote := &Note{}
+		if err := rows.Scan(&tempId, &tempNote.AuthorId, &tempNote.Content, &tempNote.CreationTime); err != nil {
+			return nil, convertPostgresError(err)
+		}
+
+		noteMap[NoteId(tempId)] = tempNote
+	}
+
+	return noteMap, nil
+}
+
+func (db *DB) GetNoteById(noteId NoteId) (*Note, error) {
+
+	sqlQuery := `
+		SELECT * FROM note
+		WHERE note.id = ($1)`
+
+	noteMap, err := db.getNoteMap(sqlQuery, int64(noteId))
+	if err != nil {
+		return nil, err
+	}
+
+	note, ok := noteMap[noteId]
+	if !ok {
+		return nil, NoNoteFoundError
+	}
+
+	return note, nil
+}
+
+func (db *DB) UpdateNoteContent(noteId NoteId, content string) error {
+	sqlQuery := `
+		UPDATE note SET content = ($2)
+		WHERE id = ($1)`
+
+	rowsAffected, err := db.execNoResults(sqlQuery, int64(noteId), content)
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return NoNoteFoundError
+	}
+
+	if rowsAffected > 1 {
+		return TooManyRowsAffectedError
+	}
+
+	return nil
+}
+
 func (db *DB) DeleteNoteById(noteId NoteId) error {
 	sqlQuery := `
 		DELETE FROM note
@@ -182,7 +247,7 @@ func (db *DB) DeleteNoteById(noteId NoteId) error {
 	}
 
 	if num != 1 {
-		return errors.New("somehow more than 1 note was deleted")
+		return TooManyRowsAffectedError
 	}
 
 	return nil
