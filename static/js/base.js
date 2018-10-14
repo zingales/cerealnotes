@@ -20,7 +20,11 @@ $(function() {
     };
   });
 
+<<<<<<< HEAD
   jQuery.prototype.getDOM = function() {
+=======
+  jQuery.prototype.getUnderlyingDomElement = function() {
+>>>>>>> origin/master
     if (this.length === 1) {
         return this[0];
     }

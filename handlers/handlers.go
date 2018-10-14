@@ -484,7 +484,7 @@ func HandleNoteApiRequest(
 	}
 }
 
-func HandleCategoryApiRequest(
+func HandleNoteCateogryApiRequest(
 	env *Environment,
 	responseWriter http.ResponseWriter,
 	request *http.Request,
@@ -529,32 +529,6 @@ func HandleCategoryApiRequest(
 
 	case http.MethodPost:
 
-		type CategoryForm struct {
-			NoteId   int64  `json:"noteId"`
-			Category string `json:"category"`
-		}
-
-		noteForm := new(CategoryForm)
-
-		if err := json.NewDecoder(request.Body).Decode(noteForm); err != nil {
-			return err, http.StatusBadRequest
-		}
-
-		category, err := models.DeserializeCategory(strings.ToLower(noteForm.Category))
-
-		if err != nil {
-			return err, http.StatusBadRequest
-		}
-
-		if err := env.Db.StoreNewNoteCategoryRelationship(models.NoteId(noteForm.NoteId), category); err != nil {
-			return err, http.StatusInternalServerError
-		}
-
-		responseWriter.WriteHeader(http.StatusCreated)
-
-		return nil, 0
-
-	case http.MethodPut:
 		id, err := strconv.ParseInt(request.URL.Query().Get("id"), 10, 64)
 		noteId := models.NoteId(id)
 
@@ -566,27 +540,27 @@ func HandleCategoryApiRequest(
 			return err, http.StatusInternalServerError
 		}
 
-		type CategoryForm struct {
-			Category string `json:"category"`
+		type NoteCategoryForm struct {
+			NoteCategory string `json:"category"`
 		}
 
-		noteForm := new(CategoryForm)
+		categoryForm := new(NoteCategoryForm)
 
-		if err := json.NewDecoder(request.Body).Decode(noteForm); err != nil {
+		if err := json.NewDecoder(request.Body).Decode(categoryForm); err != nil {
 			return err, http.StatusBadRequest
 		}
 
-		category, err := models.DeserializeCategory(strings.ToLower(noteForm.Category))
+		category, err := models.DeserializeNoteCategory(categoryForm.NoteCategory)
+
 		if err != nil {
 			return err, http.StatusBadRequest
 		}
 
-		if err := env.Db.UpdateNoteCategory(noteId, category); err != nil {
+		if err := env.Db.AssignNoteCategoryRelationship(models.NoteId(noteId), category); err != nil {
 			return err, http.StatusInternalServerError
 		}
 
-		responseWriter.WriteHeader(http.StatusOK)
-
+		responseWriter.WriteHeader(http.StatusCreated)
 		return nil, 0
 
 	case http.MethodDelete:
@@ -609,7 +583,6 @@ func HandleCategoryApiRequest(
 	default:
 		return respondWithMethodNotAllowed(responseWriter, http.MethodPost, http.MethodPut, http.MethodDelete)
 	}
-
 }
 
 func RedirectToPathHandler(

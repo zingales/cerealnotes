@@ -122,7 +122,7 @@ func (db *DB) GetIdForUserWithEmailAddress(emailAddress *EmailAddress) (UserId, 
 	return UserId(userId), nil
 }
 
-func (db *DB) GetAllUsersById() (UserMap, error) {
+func (db *DB) GetAllUsersById() (UsersById, error) {
 	sqlQuery := `
 		SELECT id, display_name FROM app_user`
 
@@ -133,7 +133,7 @@ func (db *DB) GetAllUsersById() (UserMap, error) {
 
 	defer rows.Close()
 
-	var userMap UserMap = make(map[UserId]*User)
+	var userMap UsersById = make(map[UserId]*User)
 
 	for rows.Next() {
 		var tempId int64
