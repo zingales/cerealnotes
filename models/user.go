@@ -30,7 +30,6 @@ func (emailAddress *EmailAddress) String() string {
 var EmailAddressAlreadyInUseError = errors.New("Email address already in use")
 
 var CredentialsNotAuthorizedError = errors.New("The provided credentials were not found")
-
 //
 
 func (db *DB) StoreNewUser(

@@ -16,7 +16,6 @@ type Note struct {
 var NoNoteFoundError = errors.New("No note with that information could be found")
 
 //  DB methods
-
 func (db *DB) StoreNewNote(
 	note *Note,
 ) (NoteId, error) {
@@ -79,7 +78,7 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NotesById,
 			   INNER JOIN note
 					   ON note.id = note2pub.note_id
 		WHERE  rank <= ($1)`
-
+  
 	// sqlQueryGetNotes := `
 	// 	SELECT
 	// 	note.id,
@@ -122,6 +121,7 @@ func (db *DB) GetAllPublishedNotesVisibleBy(userId UserId) (map[int64]NotesById,
 		noteMap, ok := pubToNotesById[publicationNumber]
 		if !ok {
 			pubToNotesById[publicationNumber] = make(map[NoteId]*Note)
+      noteMap = pubToNotesById[publicationNumber]
 		}
 
 		noteMap[NoteId(noteId)] = note
@@ -146,7 +146,6 @@ func (db *DB) GetMyUnpublishedNotes(userId UserId) (NotesById, error) {
 }
 
 func (db *DB) getNotesById(sqlQuery string, args ...interface{}) (NotesById, error) {
-
 	noteMap := make(map[NoteId]*Note)
 
 	rows, err := db.Query(sqlQuery, args...)

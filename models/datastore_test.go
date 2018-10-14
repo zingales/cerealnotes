@@ -138,8 +138,11 @@ func TestPublication(t *testing.T) {
 
 	test_util.Equals(t, 0, len(publicationToNotesById))
 
-	// TODO once we implement publication publishing, test publication adding,
-	// and that GetAllPublishedNotesVisibleBy has non-zero rows
+	err = db.PublishNotes(userId)
+	ok(t, err)
+
+	publicationToNoteMap, err = db.GetAllPublishedNotesVisibleBy(userId)
+	equals(t, 1, len(publicationToNoteMap))
 }
 
 func TestCategory(t *testing.T) {
