@@ -13,3 +13,8 @@
 2. run `./beam_me_up_scotty.sh` and everything should work
 
 Please note step 1 is only necessary the first time you connect set up your test environment, or whenever a new package is added
+
+
+##Release To Heroku Prod
+* heroku container:push web --app cerealnotes
+* heroku container:release web --app cerealnotes
