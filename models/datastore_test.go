@@ -27,15 +27,16 @@ var tables = []string{
 	userTable,
 }
 
-func ClearValuesInAllTables(db *models.DB) {
+func ClearDatabase(db *models.DB) error {
 	for _, val := range tables {
-		if err := ClearValuesInTable(db, val); err != nil {
-			panic(err)
+		if err := ClearTable(db, val); err != nil {
+			return err
 		}
 	}
+	return nil
 }
 
-func ClearValuesInTable(db *models.DB, table string) error {
+func ClearTable(db *models.DB, table string) error {
 	// db.Query() doesn't allow variables to replace columns or table names.
 	sqlQuery := fmt.Sprintf(`TRUNCATE %s CASCADE;`, table)
 
@@ -50,7 +51,7 @@ func ClearValuesInTable(db *models.DB, table string) error {
 func TestUser(t *testing.T) {
 	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
-	ClearValuesInTable(db, userTable)
+	ClearTable(db, userTable)
 
 	displayName := "boby"
 	password := "aPassword"
@@ -79,8 +80,8 @@ func TestUser(t *testing.T) {
 func TestNote(t *testing.T) {
 	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
-	ClearValuesInTable(db, userTable)
-	ClearValuesInTable(db, noteTable)
+	ClearTable(db, userTable)
+	ClearTable(db, noteTable)
 
 	displayName := "bob"
 	password := "aPassword"
@@ -122,10 +123,10 @@ func TestNote(t *testing.T) {
 func TestPublication(t *testing.T) {
 	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
-	ClearValuesInTable(db, userTable)
-	ClearValuesInTable(db, noteTable)
-	ClearValuesInTable(db, publicationTable)
-	ClearValuesInTable(db, noteToPublicationTable)
+	ClearTable(db, userTable)
+	ClearTable(db, noteTable)
+	ClearTable(db, publicationTable)
+	ClearTable(db, noteToPublicationTable)
 
 	displayName := "bob"
 	password := "aPassword"
@@ -158,9 +159,9 @@ func TestPublication(t *testing.T) {
 func TestCategory(t *testing.T) {
 	db, err := models.ConnectToDatabase(postgresUrl, 10)
 	test_util.Ok(t, err)
-	ClearValuesInTable(db, userTable)
-	ClearValuesInTable(db, noteTable)
-	ClearValuesInTable(db, noteToCategoryTable)
+	ClearTable(db, userTable)
+	ClearTable(db, noteTable)
+	ClearTable(db, noteToCategoryTable)
 
 	displayName := "bob"
 	password := "aPassword"

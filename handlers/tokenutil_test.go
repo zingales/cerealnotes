@@ -1,7 +1,6 @@
 package handlers_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/atmiguel/cerealnotes/handlers"
@@ -15,19 +14,19 @@ func TestToken(t *testing.T) {
 	var num models.UserId = 32
 	bob, err := handlers.CreateTokenAsString(env, num, 1)
 	if err != nil {
-		panic(err)
+		t.Fatal("Error creating token")
 	}
 
 	token, err := handlers.ParseTokenFromString(env, bob)
 	if err != nil {
-		panic(err)
+		t.Fatal("Error parsing token")
 	}
 	if claims, ok := token.Claims.(*handlers.JwtTokenClaim); ok && token.Valid {
 		test_util.Equals(t, int64(32), int64(claims.UserId))
 
-		fmt.Printf("%v %v", claims.UserId, claims.StandardClaims.ExpiresAt)
+		t.Logf("%v %v", claims.UserId, claims.StandardClaims.ExpiresAt)
 	} else {
-		fmt.Println("Token claims could not be read")
+		t.Logf("Token claims could not be read")
 		t.FailNow()
 	}
 }
