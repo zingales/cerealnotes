@@ -12,6 +12,12 @@ const NOTE_TYPES = [
 const classNamesByName = {
   noteTypeButton: 'note-type-button',
   primaryButton: 'mui-btn--primary',
+  noteAuthorSpan: 'note-author',
+  noteCategorySpan: 'note-category',
+  noteTimeSpan: 'note-time',
+  noteIdSpan: 'note-id',
+  noteContent: 'note-content',
+
 };
 
 const classesByName = {
@@ -63,11 +69,13 @@ const $createTextAreaDiv = function(labelText) {
     .append($label);
 };
 
+
 // NOTES
 const $createAuthor = function(authorId) {
   const user = USERS_BY_ID[authorId];
 
   return $('<span>', {
+    class: classNamesByName.noteAuthorSpan,
     text: user.displayName
   });
 };
@@ -77,19 +85,24 @@ const $createType = function(noteId) {
   $.get('/api/note-category?id=' + noteId, function(responseObj) {
     $("#" + spandId).text(responseObj.category);
   });
-  return $('<span id="' + spandId + '">', {
+
+  return $('<span>', {
+    class: classNamesByName.noteCategorySpan,
+    id: spandId,
     text: ' - '
   });
 };
 
 const $createCreationTime = function(creationTime) {
   return $('<span>', {
+    class: classNamesByName.noteTimeSpan,
     text: moment(creationTime).fromNow()
   });
 };
 
 const $createContent = function(content) {
   return $('<div>', {
+    class: classNamesByName.noteContent,
     text: content
   });
 };
@@ -103,6 +116,7 @@ const $createDivider = function() {
 const $createNote = function(noteId, note) {
   const $author = $createAuthor(note.authorId);
   const $noteId = $('<span>', {
+    class: classNamesByName.noteIdSpan,
     text: noteId
   })
   const $type = $createType(noteId);
@@ -110,9 +124,9 @@ const $createNote = function(noteId, note) {
   const $content = $createContent(note.content);
 
   const $header = $('<div>').addClass('note-header')
-    .append($noteId).append($createDivider())
-    .append($author).append($createDivider())
-    .append($type).append($createDivider())
+    .append($noteId)
+    .append($author)
+    .append($type)
     .append($creationTime);
 
   return $('<div>').addClass('note')
@@ -150,7 +164,7 @@ function $createAddNoteModal() {
           deactivateButton($button);
         }
       }
-    }).then((_) => {
+    }).finally(() => {
       refreshNotes();
     })
 
@@ -184,18 +198,20 @@ async function sendNewNote(noteContent, cateogry) {
     console.log(errorThrown);
   });
 
-  const noteId = data.noteId;
-  var bob = await $.ajax({
-    url: '/api/note-category?id=' + noteId,
-    type: "POST",
-    data: JSON.stringify({
-      'category': cateogry.toLowerCase()
-    }),
-    contentType: "application/json; charset=utf-8",
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    console.log("in note category post")
-    console.log(errorThrown);
-  });
+  if (cateogry) {
+    const noteId = data.noteId;
+    var bob = await $.ajax({
+      url: '/api/note-category?id=' + noteId,
+      type: "POST",
+      data: JSON.stringify({
+        'category': cateogry.toLowerCase()
+      }),
+      contentType: "application/json; charset=utf-8",
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.log("in note category post")
+      console.log(errorThrown);
+    });
+  }
 }
 
 const activateModal = function($modal) {

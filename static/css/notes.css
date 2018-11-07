@@ -1,26 +1,57 @@
 .note-header {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .modal {
-    width: 350px;
-    height: 400px;
-    margin: 25px auto;
-
-    background-color: #fff;
+  width: 350px;
+  height: 400px;
+  margin: 25px auto;
+  background-color: #fff;
 }
 
 #add-note-button {
-    position: fixed;
-    bottom: 1em;
-    right: 1em;
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
 }
 
 .note-type-button {
-    width: 100%;
+  width: 100%;
 }
 
 .note-content {
-    width: 90%;
-    margin: auto;
+  width: 90%;
+  margin: auto;
+}
+
+#notes {
+  padding: 5%;
+}
+
+.note-content {}
+
+.note {
+  margin: 2%;
+  background-color: LightGrey;
+}
+
+.note-author {
+  display: inline-block;
+  width: 25%;
+}
+
+.note-category {
+  display: inline-block;
+  width: 25%;
+}
+
+.note-time {
+  display: inline-block;
+  width: 20%;
+  float: right;
+}
+
+.note-id {
+  display: inline-block;
+  width: 5%;
 }
