@@ -9,15 +9,15 @@ type NoteCategory int
 const (
 	MARGINALIA NoteCategory = iota
 	META
-	QUESTIONS
-	PREDICTIONS
+	QUESTION
+	PREDICTION
 )
 
 var categoryStrings = [...]string{
 	"marginalia",
 	"meta",
-	"questions",
-	"predictions",
+	"question",
+	"prediction",
 }
 
 var CannotDeserializeNoteCategoryStringError = errors.New("String does not correspond to a Note Category")
@@ -34,7 +34,7 @@ func DeserializeNoteCategory(input string) (NoteCategory, error) {
 
 func (category NoteCategory) String() string {
 
-	if category < MARGINALIA || category > PREDICTIONS {
+	if category < MARGINALIA || category > PREDICTION {
 		return "Unknown"
 	}
 

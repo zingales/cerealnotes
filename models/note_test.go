@@ -10,8 +10,8 @@ import (
 var deserializationTests = []models.NoteCategory{
 	models.MARGINALIA,
 	models.META,
-	models.QUESTIONS,
-	models.PREDICTIONS,
+	models.QUESTION,
+	models.PREDICTION,
 }
 
 func TestDeserialization(t *testing.T) {

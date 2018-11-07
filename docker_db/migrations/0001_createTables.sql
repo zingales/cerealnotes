@@ -1,7 +1,7 @@
 \c cerealnotes;
 
 -- Types
-CREATE TYPE category_type AS ENUM ('predictions', 'marginalia', 'meta', 'questions');
+CREATE TYPE category_type AS ENUM ('prediction', 'marginalia', 'meta', 'question');
 
 -- Tables
 CREATE TABLE IF NOT EXISTS app_user (

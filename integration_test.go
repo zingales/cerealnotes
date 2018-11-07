@@ -228,7 +228,7 @@ func TestAuthenticatedFlow(t *testing.T) {
 
 		// Update cateogry
 		t.Run("Update Category", func(t *testing.T) {
-			questionCateogry := models.QUESTIONS
+			questionCateogry := models.QUESTION
 			categoryForm := &CategoryForm{Category: questionCateogry.String()}
 			jsonValue, _ := json.Marshal(categoryForm)
 

@@ -185,7 +185,7 @@ func TestCategory(t *testing.T) {
 	test_util.Ok(t, err)
 	test_util.Equals(t, assignedCategory, retrievedCategory)
 
-	newAssignedCategory := models.PREDICTIONS
+	newAssignedCategory := models.PREDICTION
 	err = db.AssignNoteCategoryRelationship(noteId, newAssignedCategory)
 	test_util.Ok(t, err)
 

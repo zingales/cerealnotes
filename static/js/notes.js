@@ -120,8 +120,8 @@ const $createNote = function(noteId, note) {
     .append($content);
 };
 
-// ADD NOTE
-const $createAddNoteModal = function() {
+// ADD
+function $createAddNoteModal() {
   const $modal = $('<div>').addClass('modal').addClass('mui-container')
 
   const $buttons = NOTE_TYPES.map(noteType => {
@@ -142,10 +142,17 @@ const $createAddNoteModal = function() {
       }
     }
 
-    sendNewNote(content, category);
-
-
-    mui.overlay('off');
+    sendNewNote(content, category).then((_) => {
+      mui.overlay('off');
+      $textareaDiv.children()[0].value = "";
+      for (const $button of $buttons) {
+        if (isButtonActive($button)) {
+          deactivateButton($button);
+        }
+      }
+    }).then((_) => {
+      refreshNotes();
+    })
 
   }
 
@@ -159,8 +166,12 @@ const $createAddNoteModal = function() {
     .append($submitNoteButton);
 };
 
+async function refreshNotes() {
+  location.reload();
+}
+
 async function sendNewNote(noteContent, cateogry) {
-  $.ajax({
+  var data = await $.ajax({
     url: '/api/note',
     type: "POST",
     data: JSON.stringify({
@@ -168,22 +179,22 @@ async function sendNewNote(noteContent, cateogry) {
     }),
     contentType: "application/json; charset=utf-8",
     dataType: "json",
-    success: function(data) {
-      console.log("success" + data);
-      const noteId = data.noteId;
-      $.ajax({
-        url: '/api/note-category?id=' + noteId,
-        type: "POST",
-        data: JSON.stringify({
-          'category': cateogry.toLowerCase()
-        }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function(data) {
-          debugger;
-        }
-      });
-    }
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log("in note post")
+    console.log(errorThrown);
+  });
+
+  const noteId = data.noteId;
+  var bob = await $.ajax({
+    url: '/api/note-category?id=' + noteId,
+    type: "POST",
+    data: JSON.stringify({
+      'category': cateogry.toLowerCase()
+    }),
+    contentType: "application/json; charset=utf-8",
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    console.log("in note category post")
+    console.log(errorThrown);
   });
 }
 
