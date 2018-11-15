@@ -9,15 +9,30 @@
 {{ end }}
 
 {{ define "content" }}
-    <div class="mui-container">
+    <div class="mui-container-fluid">
         <h1 class="mui--text-center">
             CerealNotes
         </h1>
 
-        <div id="notes"></div>
+        <div id="notes" class="AutoGridNoWrap-wrapper-2">
+        </div>
 
         <div id="add-note-button">
             <button class="mui-btn mui-btn--fab mui-btn--primary">+</button>
         </div>
+    </div>
+
+    <div id="templates" style="display: none;">
+      <div class="note MuiGrid-container-31 MuiGrid-spacing-xs-16-54 MuiGrid-wrap-xs-nowrap-37">
+        <div class="note-header MuiGrid-item-32">
+          <span class="note-author xs-1"></span>
+          <span class="note-category xs-1" id="id_category">Marginalia</span>
+          <span class="note-id xs-1"></span>
+          <span class="note-time xs-1"></span>
+        </div>
+        <div class="MuiGrid-item-32 MuiGrid-grid-xs-true-59">
+          <p class="note-content MuiTypography-root-131 MuiTypography-body1-140"></p>
+        </div>
+      </div>
     </div>
 {{ end }}

@@ -71,68 +71,32 @@ const $createTextAreaDiv = function(labelText) {
 
 
 // NOTES
-const $createAuthor = function(authorId) {
-  const user = USERS_BY_ID[authorId];
-
-  return $('<span>', {
-    class: classNamesByName.noteAuthorSpan,
-    text: user.displayName
-  });
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-const $createType = function(noteId) {
-  let spandId = noteId + "_category";
-  $.get('/api/note-category?id=' + noteId, function(responseObj) {
-    $("#" + spandId).text(responseObj.category);
+function assignCategory(noteId, $cateogry) {
+  let id = `${noteId}_category`;
+  $cateogry.prop('id', id);
+
+  return $.get('/api/note-category?id=' + noteId, function(responseObj) {
+    $(`#${id}`).text(capitalizeFirstLetter(responseObj.category));
   });
+}
 
-  return $('<span>', {
-    class: classNamesByName.noteCategorySpan,
-    id: spandId,
-    text: ' - '
-  });
-};
+function $createNote(noteId, note) {
+  let $newNote = $("#templates .note").clone();
+  $newNote.find(`.${classNamesByName.noteIdSpan}`).text(noteId);
+  $newNote.find(`.${classNamesByName.noteAuthorSpan}`).text(USERS_BY_ID[note.authorId].displayName);
+  $newNote.find(`.${classNamesByName.noteTimeSpan}`).text(moment(note.creationTime).fromNow());
+  $newNote.find(`.${classNamesByName.noteContent}`).text(note.content);
 
-const $createCreationTime = function(creationTime) {
-  return $('<span>', {
-    class: classNamesByName.noteTimeSpan,
-    text: moment(creationTime).fromNow()
-  });
-};
+  // Assign type info
+  assignCategory(noteId, $newNote.find(`.${classNamesByName.noteCategorySpan}`));
 
-const $createContent = function(content) {
-  return $('<div>', {
-    class: classNamesByName.noteContent,
-    text: content
-  });
-};
+  return $newNote;
 
-const $createDivider = function() {
-  return $('<span>', {
-    text: ' - '
-  });
-};
-
-const $createNote = function(noteId, note) {
-  const $author = $createAuthor(note.authorId);
-  const $noteId = $('<span>', {
-    class: classNamesByName.noteIdSpan,
-    text: noteId
-  })
-  const $type = $createType(noteId);
-  const $creationTime = $createCreationTime(note.creationTime);
-  const $content = $createContent(note.content);
-
-  const $header = $('<div>').addClass('note-header')
-    .append($noteId)
-    .append($author)
-    .append($type)
-    .append($creationTime);
-
-  return $('<div>').addClass('note')
-    .append($header)
-    .append($content);
-};
+}
 
 // ADD
 function $createAddNoteModal() {

@@ -1,7 +1,4 @@
-.note-header {
-  font-weight: bold;
-}
-
+/* Add note */
 .modal {
   width: 350px;
   height: 400px;
@@ -19,39 +16,22 @@
   width: 100%;
 }
 
-.note-content {
-  width: 90%;
-  margin: auto;
-}
-
+/* Notes page */
 #notes {
-  padding: 5%;
+  margin: 5%;
 }
-
-.note-content {}
 
 .note {
-  margin: 2%;
+  margin-bottom: 1%;
+  margin-top: 1%;
+  padding: 2%;
   background-color: LightGrey;
 }
 
-.note-author {
-  display: inline-block;
-  width: 25%;
+.note-content {
+  margin: auto;
 }
 
-.note-category {
-  display: inline-block;
-  width: 25%;
-}
-
-.note-time {
-  display: inline-block;
-  width: 20%;
-  float: right;
-}
-
-.note-id {
-  display: inline-block;
-  width: 5%;
+.note-header {
+  font-weight: bold;
 }
